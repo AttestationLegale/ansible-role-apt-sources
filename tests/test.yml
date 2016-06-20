@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  remote_user: root
+
+  vars:
+    - apt_sources_entries:
+      - url: "https://deb.nodesource.com/node_6.x"
+        key: "https://deb.nodesource.com/gpgkey/nodesource.gpg.key"
+
+  roles:
+    - ansible-role-apt-sources

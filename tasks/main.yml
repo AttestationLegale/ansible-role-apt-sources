@@ -1,0 +1,21 @@
+---
+
+# Main tasks file for apt-sources role
+
+- name: 'Install apt sources keys'
+  apt_key:
+    url: "{{ item.key }}"
+  with_flattened:
+    - "{{ apt_sources_entries }}"
+    - "{{ apt_sources_group__entries }}"
+    - "{{ apt_sources_host_entries }}"
+  tags: [configuration,system,apt]
+
+- name: 'Install apt sources reposritories'
+  apt_repository:
+    repo: "deb {{ item.url }} {{ item.release|default(ansible_distribution_release) }} {{ item.components|default('main') }}"
+  with_flattened:
+    - "{{ apt_sources_entries }}"
+    - "{{ apt_sources_group__entries }}"
+    - "{{ apt_sources_host_entries }}"
+  tags: [configuration,system,apt]

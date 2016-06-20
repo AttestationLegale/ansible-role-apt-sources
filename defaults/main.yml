@@ -1,0 +1,7 @@
+---
+
+# Defaults vars file for apt-sources role
+
+apt_sources_entries: []
+apt_sources_group_entries: []
+apt_sources_host_entries: []

@@ -1,0 +1,66 @@
+---
+sudo: required
+language: python
+python: "2.7"
+
+env:
+  - SITE=test.yml
+
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y curl
+
+install:
+  # Install Ansible.
+  - pip install ansible
+
+  # Add ansible.cfg to pick up roles path.
+  - "{ echo '[defaults]'; echo 'roles_path = ../'; } >> ansible.cfg"
+
+script:
+  # Check the role/playbook's syntax.
+  - "ansible-playbook -i tests/inventory tests/$SITE --syntax-check"
+
+  # Run the role/playbook with ansible-playbook.
+  - "ansible-playbook -i tests/inventory tests/$SITE --connection=local --sudo"
+
+  # Run the role/playbook again, checking to make sure it's idempotent.
+  - >
+    ansible-playbook -i tests/inventory tests/$SITE --connection=local --sudo
+    | grep -q 'changed=0.*failed=0'
+    && (echo 'Idempotence test: pass' && exit 0)
+    || (echo 'Idempotence test: fail' && exit 1)
+
+  # Check if /etc/skel/.ssh exists and is a directory.
+  - >
+    test -d /etc/skel/.ssh
+    && (echo '/etc/skel/.ssh is a directory - pass' && exit 0)
+    || (echo '/etc/skel/.ssh does not exist or is not a directory - fail' && exit 1)
+
+  # Check if /etc/skel/.ssh mode is 0700.
+  - >
+    ls -dl /etc/skel/.ssh
+    | awk '{ print $1; }' | grep -q "^drwx------$"
+    && (echo '/etc/skel/.ssh mode = 0700 - pass' && exit 0)
+    || (echo '/etc/skel/.ssh mode != 0700 - fail' && exit 1)
+
+  # Check if /etc/skel/passwd exists and is a symlink.
+  - >
+    test -h /etc/skel/passwd
+    && (echo '/etc/skel/passwd is a symlink - pass' && exit 0)
+    || (echo '/etc/skel/passwd does not exist or is not a symlink - fail' && exit 1)
+
+  # Check if /etc/skel/foo exists and is a file.
+  - >
+    test -f /etc/skel/foo
+    && (echo '/etc/skel/foo is a file - pass' && exit 0)
+    || (echo '/etc/skel/foo doe not exist or is not a file - fail' && exit 1)
+
+  # Check if /etc/skel/bar exists and is a file.
+  - >
+    test -f /etc/skel/bar
+    && (echo '/etc/skel/bar is a file - pass' && exit 0)
+    || (echo '/etc/skel/bar doe not exist or is not a file - fail' && exit 1)
+
+notifications:
+  webhooks: https://galaxy.ansible.com/api/v1/notifications/
